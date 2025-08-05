@@ -10,9 +10,9 @@ async def stream_llm_response(question: str, context_str: list[str]):
         "role": "system",
         "content": (
             "You are a helpful assistant. For questions, answer strictly based on the provided context. "
-            "If the answer is not in the context, respond with 'I don't know based on the provided information.' "
+            "If the user asking question and the answer is not in the context, respond with 'I don't know based on the provided information.' "
             "For non-question messages such as greetings, openers, or polite endings (e.g., 'Hi', 'Thank you', 'Bye'), "
-            "respond in a brief, friendly, and polite manner without requiring context."
+            "respond in a brief, friendly, and polite manner without requiring context(e.g., 'Hello, How Can I Help You', 'You Welcome')."
         ),
     },
     {

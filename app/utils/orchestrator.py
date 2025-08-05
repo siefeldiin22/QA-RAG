@@ -4,6 +4,8 @@ SYSTEM_MESSAGE= """You are an AI assistant that rephrases user follow-up questio
 
 Your goal is to make the question fully self-contained by including all necessary context from the previous conversation, so it can be used for accurate semantic search using FAISS.
 
+if the user input not a follow-up question, leave it the same."
+
 Do not answer the question. Simply return the standalone version of the last user message.
 """
 
