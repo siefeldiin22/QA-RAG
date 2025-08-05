@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sessions Review</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #f6f8fb 0%, #e9ecef 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        .back-button {
+        background: #6c757d;
+        color: white;
+        border: none;
+        padding: 8px 15px;
+        margin-top: 20px;
+        border-radius: 20px;
+        font-size: 14px;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+        margin-left: 15px;
+        width: fit-content;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .back-button:hover {
+        background: #5a6268;
+    }
+
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding: 2rem;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            color: #6b7280;
+            font-size: 1.1rem;
+        }
+
+        .filters {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            margin-bottom: 2rem;
+            display: flex;
+            gap: 1rem;
+            align-items: end;
+            flex-wrap: wrap;
+            justify-content: space-between;
+        }
+
+        .filters-row {
+            display: flex;
+            gap: 1rem;
+            align-items: end;
+            flex-wrap: wrap;
+            flex: 1;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            min-width: 120px;
+            flex: 0 0 auto;
+        }
+
+        .filter-group label {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #374151;
+        }
+
+        .filter-group input, .filter-group select {
+            padding: 0.5rem 0.75rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            transition: border-color 0.2s;
+        }
+
+        .filter-group input:focus, .filter-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .sessions-grid {
+            display: grid;
+            gap: 1.5rem;
+        }
+
+        .session-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            border: 1px solid #e5e7eb;
+            transition: all 0.3s ease;
+        }
+
+        .session-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            border-color: #667eea;
+        }
+
+        .session-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        .session-id {
+            font-weight: 700;
+            color: #667eea;
+            font-size: 1.1rem;
+        }
+
+        .session-date {
+            color: #6b7280;
+            font-size: 0.9rem;
+        }
+
+        .session-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 0.75rem;
+            background: #f9fafb;
+            border-radius: 8px;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #111827;
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .queries-list {
+            margin-top: 1rem;
+        }
+
+        .queries-toggle {
+            background: #f3f4f6;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #374151;
+            transition: background-color 0.2s;
+            width: 100%;
+            text-align: left;
+        }
+
+        .queries-toggle:hover {
+            background: #e5e7eb;
+        }
+
+        .queries-content {
+            display: none;
+            margin-top: 1rem;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .query-item {
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+            background: #f8fafc;
+            border-radius: 6px;
+            border-left: 3px solid #667eea;
+        }
+
+        .query-question {
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 0.25rem;
+        }
+
+        .query-response {
+            font-size: 0.9rem;
+            color: #6b7280;
+            margin-bottom: 0.25rem;
+            max-height: 60px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .query-meta {
+            font-size: 0.8rem;
+            color: #9ca3af;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 3rem;
+            color: #6b7280;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f4f6;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error-message {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            color: #dc2626;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: #6b7280;
+        }
+
+        .empty-state h3 {
+            margin-bottom: 0.5rem;
+            color: #374151;
+        }
+
+        @media (max-width: 1024px) {
+            .session-stats {
+                grid-template-columns: repeat(3, 1fr);
+            }
+            
+            .filters-row {
+                justify-content: flex-start;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+
+            .filters {
+                padding: 1rem;
+            }
+
+            .filters-row {
+                flex-direction: column;
+                align-items: stretch;
+                width: 100%;
+            }
+
+            .filter-group {
+                min-width: unset;
+                flex: 1;
+            }
+
+            .btn {
+                width: 100%;
+                margin-top: 1rem;
+            }
+
+            .session-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .session-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.5rem;
+            }
+
+            .session-id {
+                font-size: 1rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header {
+                padding: 1.5rem;
+            }
+
+            .header h1 {
+                font-size: 1.75rem;
+            }
+
+            .session-card {
+                padding: 1rem;
+            }
+
+            .session-stats {
+                grid-template-columns: 1fr;
+                gap: 0.75rem;
+            }
+
+            .stat-item {
+                padding: 0.5rem;
+            }
+
+            .stat-value {
+                font-size: 1.25rem;
+            }
+
+            .query-item {
+                padding: 0.5rem;
+            }
+
+            .query-response {
+                max-height: 40px;
+            }
+        }
+    </style>
+</head>
+<body>
+     </div>
+        <button class="back-button" onclick="window.location.href='/dashboard'">
+            ← Back to Dashboard
+        </button>
+    </div>
+    <div class="container">
+        <div class="header">
+            <h1>Sessions Review</h1>
+            <p>Review and analyze user interaction sessions</p>
+        </div>
+
+        <div class="filters">
+            <div class="filters-row">
+                <div class="filter-group">
+                    <label for="dateFrom">From Date</label>
+                    <input type="date" id="dateFrom">
+                </div>
+                <div class="filter-group">
+                    <label for="dateTo">To Date</label>
+                    <input type="date" id="dateTo">
+                </div>
+                <div class="filter-group">
+                    <label for="minQueries">Min Queries</label>
+                    <input type="number" id="minQueries" placeholder="0" min="0">
+                </div>
+                <div class="filter-group">
+                    <label for="sortBy">Sort By</label>
+                    <select id="sortBy">
+                        <option value="date_desc">Date (Newest)</option>
+                        <option value="date_asc">Date (Oldest)</option>
+                        <option value="queries_desc">Most Queries</option>
+                        <option value="queries_asc">Least Queries</option>
+                    </select>
+                </div>
+            </div>
+            <button class="btn btn-primary" onclick="loadSessions()">Load Sessions</button>
+        </div>
+
+        <div id="loading" class="loading" style="display: none;">
+            <div class="spinner"></div>
+            <p>Loading sessions...</p>
+        </div>
+
+        <div id="error-message" class="error-message" style="display: none;"></div>
+
+        <div id="sessions-container" class="sessions-grid"></div>
+    </div>
+
+    <script>
+        async function loadSessions() {
+            const token = localStorage.getItem("access_token");
+            if (!token) {
+                showError("No access token found. Please login first.");
+                return;
+            }
+
+            const loading = document.getElementById('loading');
+            const container = document.getElementById('sessions-container');
+            const errorDiv = document.getElementById('error-message');
+
+            loading.style.display = 'block';
+            container.innerHTML = '';
+            errorDiv.style.display = 'none';
+
+            try {
+                // Build query parameters
+                const params = new URLSearchParams();
+                const dateFrom = document.getElementById('dateFrom').value;
+                const dateTo = document.getElementById('dateTo').value;
+                const minQueries = document.getElementById('minQueries').value;
+                const sortBy = document.getElementById('sortBy').value;
+
+                if (dateFrom) params.append('date_from', dateFrom);
+                if (dateTo) params.append('date_to', dateTo);
+                if (minQueries) params.append('min_queries', minQueries);
+                if (sortBy) params.append('sort_by', sortBy);
+
+                const response = await fetch(`http://localhost:8800/sessions?${params}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const sessions = await response.json();
+                displaySessions(sessions);
+
+            } catch (error) {
+                showError(`Failed to load sessions: ${error.message}`);
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+
+        function displaySessions(sessions) {
+            const container = document.getElementById('sessions-container');
+
+            if (!sessions || sessions.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <h3>No Sessions Found</h3>
+                        <p>Try adjusting your filters or check back later.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = sessions.map(session => `
+                <div class="session-card">
+                    <div class="session-header">
+                        <div class="session-id">Session #${session.id}</div>
+                        <div class="session-date">${formatDate(session.started_at)}</div>
+                    </div>
+                    
+                    <div class="session-stats">
+                        <div class="stat-item">
+                            <span class="stat-value">${session.query_count || 0}</span>
+                            <span class="stat-label">Queries</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-value">${session.avg_response_time ? session.avg_response_time.toFixed(2) + 's' : 'N/A'}</span>
+                            <span class="stat-label">Avg Response</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-value">${session.total_response_time ? session.total_response_time.toFixed(2) + 's' : 'N/A'}</span>
+                            <span class="stat-label">Total Time</span>
+                        </div>
+                    </div>
+
+                    ${session.queries && session.queries.length > 0 ? `
+                        <div class="queries-list">
+                            <button class="queries-toggle" onclick="toggleQueries(${session.id})">
+                                View ${session.queries.length} Queries
+                            </button>
+                            <div id="queries-${session.id}" class="queries-content">
+                                ${session.queries.map(query => `
+                                    <div class="query-item">
+                                        <div class="query-question">${escapeHtml(query.question)}</div>
+                                        <div class="query-response">${escapeHtml(query.response || 'No response')}</div>
+                                        <div class="query-meta">
+                                            <span>${formatDate(query.timestamp)}</span>
+                                            <span>${query.response_time ? query.response_time.toFixed(2) + 's' : 'N/A'}</span>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    ` : '<p style="color: #6b7280; font-style: italic;">No queries in this session</p>'}
+                </div>
+            `).join('');
+        }
+
+        function toggleQueries(sessionId) {
+            const content = document.getElementById(`queries-${sessionId}`);
+            const button = content.previousElementSibling;
+            
+            if (content.style.display === 'none' || !content.style.display) {
+                content.style.display = 'block';
+                button.textContent = button.textContent.replace('View', 'Hide');
+            } else {
+                content.style.display = 'none';
+                button.textContent = button.textContent.replace('Hide', 'View');
+            }
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('error-message');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+        }
+
+        function formatDate(dateString) {
+            if (!dateString) return 'N/A';
+            return new Date(dateString).toLocaleString();
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Set default date range (last 30 days)
+        document.addEventListener('DOMContentLoaded', function() {
+            const today = new Date();
+            const thirtyDaysAgo = new Date(today.getTime() - (30 * 24 * 60 * 60 * 1000));
+            
+            document.getElementById('dateTo').value = today.toISOString().split('T')[0];
+            document.getElementById('dateFrom').value = thirtyDaysAgo.toISOString().split('T')[0];
+            
+            // Auto-load sessions on page load
+            loadSessions();
+        });
+    </script>
+</body>
+</html>
