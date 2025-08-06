@@ -68,6 +68,34 @@
             font-size: 1.1rem;
         }
 
+        .auth-required {
+            text-align: center;
+            padding: 3rem;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            margin-bottom: 2rem;
+        }
+
+        .auth-required h2 {
+            color: #374151;
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
+        }
+
+        .auth-required p {
+            color: #6b7280;
+            margin-bottom: 2rem;
+            font-size: 1rem;
+        }
+
+        .auth-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
         .filters {
             background: white;
             padding: 1.5rem;
@@ -125,6 +153,9 @@
             transition: all 0.2s;
             white-space: nowrap;
             flex-shrink: 0;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
         }
 
         .btn-primary {
@@ -135,6 +166,17 @@
         .btn-primary:hover {
             transform: translateY(-1px);
             box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-secondary {
+            background: #f3f4f6;
+            color: #374151;
+            border: 2px solid #e5e7eb;
+        }
+
+        .btn-secondary:hover {
+            background: #e5e7eb;
+            border-color: #d1d5db;
         }
 
         .sessions-grid {
@@ -305,6 +347,10 @@
             color: #374151;
         }
 
+        .hidden {
+            display: none !important;
+        }
+
         @media (max-width: 1024px) {
             .session-stats {
                 grid-template-columns: repeat(3, 1fr);
@@ -338,6 +384,16 @@
             .btn {
                 width: 100%;
                 margin-top: 1rem;
+            }
+
+            .auth-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .auth-buttons .btn {
+                width: 200px;
+                margin-top: 0.5rem;
             }
 
             .session-stats {
@@ -392,59 +448,93 @@
             .query-response {
                 max-height: 40px;
             }
+
+            .auth-required {
+                padding: 2rem 1rem;
+            }
         }
     </style>
 </head>
 <body>
-     </div>
+    <div>
         <button class="back-button" onclick="window.location.href='/dashboard'">
             ← Back to Dashboard
         </button>
     </div>
+    
     <div class="container">
         <div class="header">
             <h1>Sessions Review</h1>
             <p>Review and analyze user interaction sessions</p>
         </div>
 
-        <div class="filters">
-            <div class="filters-row">
-                <div class="filter-group">
-                    <label for="dateFrom">From Date</label>
-                    <input type="date" id="dateFrom">
-                </div>
-                <div class="filter-group">
-                    <label for="dateTo">To Date</label>
-                    <input type="date" id="dateTo">
-                </div>
-                <div class="filter-group">
-                    <label for="minQueries">Min Queries</label>
-                    <input type="number" id="minQueries" placeholder="0" min="0">
-                </div>
-                <div class="filter-group">
-                    <label for="sortBy">Sort By</label>
-                    <select id="sortBy">
-                        <option value="date_desc">Date (Newest)</option>
-                        <option value="date_asc">Date (Oldest)</option>
-                        <option value="queries_desc">Most Queries</option>
-                        <option value="queries_asc">Least Queries</option>
-                    </select>
-                </div>
+        <!-- Authentication Required Section -->
+        <div id="auth-required" class="auth-required hidden">
+            <h2>🔒 You are not signed in</h2>
+            <p>Please sign in to your account to view and manage your sessions.</p>
+            <div class="auth-buttons">
+                <a href="/signup" class="btn btn-primary">Create New Account</a>
+                <a href="/login" class="btn btn-secondary">Already have an account? Sign In</a>
             </div>
-            <button class="btn btn-primary" onclick="loadSessions()">Load Sessions</button>
         </div>
 
-        <div id="loading" class="loading" style="display: none;">
-            <div class="spinner"></div>
-            <p>Loading sessions...</p>
+        <!-- Main Content (hidden when not authenticated) -->
+        <div id="main-content">
+            <div class="filters">
+                <div class="filters-row">
+                    <div class="filter-group">
+                        <label for="dateFrom">From Date</label>
+                        <input type="date" id="dateFrom">
+                    </div>
+                    <div class="filter-group">
+                        <label for="dateTo">To Date</label>
+                        <input type="date" id="dateTo">
+                    </div>
+                    <div class="filter-group">
+                        <label for="minQueries">Min Queries</label>
+                        <input type="number" id="minQueries" placeholder="0" min="0">
+                    </div>
+                    <div class="filter-group">
+                        <label for="sortBy">Sort By</label>
+                        <select id="sortBy">
+                            <option value="date_desc">Date (Newest)</option>
+                            <option value="date_asc">Date (Oldest)</option>
+                            <option value="queries_desc">Most Queries</option>
+                            <option value="queries_asc">Least Queries</option>
+                        </select>
+                    </div>
+                </div>
+                <button class="btn btn-primary" onclick="loadSessions()">Load Sessions</button>
+            </div>
+
+            <div id="loading" class="loading" style="display: none;">
+                <div class="spinner"></div>
+                <p>Loading sessions...</p>
+            </div>
+
+            <div id="error-message" class="error-message" style="display: none;"></div>
+
+            <div id="sessions-container" class="sessions-grid"></div>
         </div>
-
-        <div id="error-message" class="error-message" style="display: none;"></div>
-
-        <div id="sessions-container" class="sessions-grid"></div>
     </div>
 
     <script>
+        function checkAuthentication() {
+            const token = localStorage.getItem("access_token");
+            const authRequired = document.getElementById('auth-required');
+            const mainContent = document.getElementById('main-content');
+
+            if (!token) {
+                authRequired.classList.remove('hidden');
+                mainContent.classList.add('hidden');
+                return false;
+            } else {
+                authRequired.classList.add('hidden');
+                mainContent.classList.remove('hidden');
+                return true;
+            }
+        }
+
         async function loadSessions() {
             const token = localStorage.getItem("access_token");
             if (!token) {
@@ -582,8 +672,14 @@
             return div.innerHTML;
         }
 
-        // Set default date range (last 30 days)
+        // Set default date range (last 30 days) and check authentication
         document.addEventListener('DOMContentLoaded', function() {
+            // Check authentication first
+            if (!checkAuthentication()) {
+                return; // Stop here if not authenticated
+            }
+
+            // Set up default dates if authenticated
             const today = new Date();
             const thirtyDaysAgo = new Date(today.getTime() - (30 * 24 * 60 * 60 * 1000));
             
