@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-header {
+            background: #fff;
+            padding: 15px 20px;
+            border-bottom: 1px solid #e0e0e0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .chat-header h1 {
+            font-size: 20px;
+            color: #333;
+            margin: 0;
+        }
+
+        .token-status {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .token-status.connected {
+            color: #4caf50;
+        }
+
+        .token-status.disconnected {
+            color: #f44336;
+        }
+
+        .chat-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            max-width: 800px;
+            margin: 0 auto;
+            width: 100%;
+            background: #fff;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .message {
+            max-width: 70%;
+            padding: 12px 16px;
+            border-radius: 18px;
+            word-wrap: break-word;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .message.user {
+            align-self: flex-end;
+            background: #007bff;
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+
+        .message.assistant {
+            align-self: flex-start;
+            background: #f1f3f5;
+            color: #333;
+            border-bottom-left-radius: 4px;
+        }
+
+        .message.system {
+            align-self: center;
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+            max-width: 90%;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        .message.error {
+            align-self: flex-start;
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .message pre {
+            white-space: pre-wrap;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            margin: 0;
+        }
+
+        .chat-input-container {
+            padding: 20px;
+            border-top: 1px solid #e0e0e0;
+            background: #fff;
+        }
+
+        .chat-input-wrapper {
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+        }
+
+        .chat-input {
+            flex: 1;
+            min-height: 44px;
+            max-height: 120px;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 22px;
+            font-size: 16px;
+            font-family: inherit;
+            resize: none;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .chat-input:focus {
+            border-color: #007bff;
+        }
+
+        .send-button {
+            background: #007bff;
+            color: white;
+            border: none;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.2s ease;
+            font-size: 18px;
+        }
+
+        .send-button:hover:not(:disabled) {
+            background: #0056b3;
+        }
+
+        .send-button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .typing-indicator {
+            align-self: flex-start;
+            padding: 12px 16px;
+            background: #f1f3f5;
+            border-radius: 18px;
+            border-bottom-left-radius: 4px;
+            color: #666;
+            font-style: italic;
+        }
+
+        .typing-dots {
+            display: inline-block;
+        }
+
+        .typing-dots::after {
+            content: '';
+            animation: dots 1.5s infinite;
+        }
+        .back-button {
+        background: #6c757d;
+        color: white;
+        border: none;
+        padding: 8px 15px;
+        border-radius: 20px;
+        font-size: 14px;
+        margin-top: 20px;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+        margin-left: 15px;
+        width: fit-content;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .back-button:hover {
+        background: #5a6268;
+    }
+
+        @keyframes dots {
+            0%, 20% { content: ''; }
+            40% { content: '.'; }
+            60% { content: '..'; }
+            80%, 100% { content: '...'; }
+        }
+
+        /* Mobile responsiveness */
+        @media (max-width: 768px) {
+            .message {
+                max-width: 85%;
+            }
+            
+            .chat-messages {
+                padding: 15px;
+            }
+            
+            .chat-input-container {
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-header">
+        <h1>Chat Assistant</h1>
+        <div id="tokenStatus" class="token-status disconnected">No access token found</div>
+        </div>
+        <button class="back-button" onclick="window.location.href='/dashboard'">
+            ← Back to Dashboard
+        </button>
+    </div>
+    </div>
+
+    <div class="chat-container">
+        <div class="chat-messages" id="chatMessages">
+            <div class="message system">
+                Welcome! I'll check for your access token and start the conversation.
+            </div>
+        </div>
+
+        <div class="chat-input-container">
+            <div class="chat-input-wrapper">
+                <textarea 
+                    id="chatInput" 
+                    class="chat-input" 
+                    placeholder="Type your message..."
+                    rows="1"
+                ></textarea>
+                <button id="sendButton" class="send-button" onclick="sendMessage()">
+                    ➤
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let chatHistory = []; // Store chat history in the required format
+        let isTyping = false;
+
+        function checkToken() {
+            const token = localStorage.getItem("access_token");
+            const tokenStatus = document.getElementById('tokenStatus');
+            
+            if (token) {
+                tokenStatus.textContent = 'Connected with access token';
+                tokenStatus.className = 'token-status connected';
+                return token;
+            } else {
+                tokenStatus.textContent = 'No access token found - please log in first';
+                tokenStatus.className = 'token-status disconnected';
+                return null;
+            }
+        }
+
+        function addMessage(content, type = 'assistant') {
+            const messagesContainer = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}`;
+            
+            if (type === 'assistant' && typeof content === 'object') {
+                const pre = document.createElement('pre');
+                pre.textContent = JSON.stringify(content, null, 2);
+                messageDiv.appendChild(pre);
+            } else {
+                messageDiv.textContent = content;
+            }
+            
+            messagesContainer.appendChild(messageDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        function addToChatHistory(userMessage, assistantMessage) {
+            chatHistory.push({
+                user_message: userMessage,
+                assistant_message: assistantMessage
+            });
+        }
+
+        function showTypingIndicator() {
+            if (isTyping) return;
+            
+            isTyping = true;
+            const messagesContainer = document.getElementById('chatMessages');
+            const typingDiv = document.createElement('div');
+            typingDiv.className = 'typing-indicator';
+            typingDiv.id = 'typingIndicator';
+            typingDiv.innerHTML = 'Assistant is typing<span class="typing-dots"></span>';
+            
+            messagesContainer.appendChild(typingDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        function hideTypingIndicator() {
+            const typingIndicator = document.getElementById('typingIndicator');
+            if (typingIndicator) {
+                typingIndicator.remove();
+            }
+            isTyping = false;
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const sendButton = document.getElementById('sendButton');
+            const question = input.value.trim();
+
+            if (!question) return;
+
+            const token = checkToken();
+            if (!token) {
+                addMessage('Please log in first to get an access token.', 'error');
+                return;
+            }
+
+            addMessage(question, 'user');
+            input.value = '';
+
+            sendButton.disabled = true;
+            input.disabled = true;
+            showTypingIndicator();
+
+            try {
+                // Prepare the request payload with chat history
+                const requestData = {
+                    question: question,
+                    chat_history: chatHistory
+                };
+
+                const res = await fetch('http://localhost:8800/ask', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(requestData)
+                });
+
+                if (!res.ok) {
+                    throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+                }
+
+                hideTypingIndicator();
+                const messagesContainer = document.getElementById('chatMessages');
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'message assistant';
+                messagesContainer.appendChild(messageDiv);
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+                const reader = res.body.getReader();
+                const decoder = new TextDecoder('utf-8');
+                
+                let buffer = '';
+                let displayedText = '';
+                let fullAssistantResponse = '';
+
+                function sleep(ms) {
+                    return new Promise(resolve => setTimeout(resolve, ms));
+                }
+
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+
+                    const chunk = decoder.decode(value, { stream: true });
+                    buffer += chunk;
+                    fullAssistantResponse += chunk;
+
+                    // Split into words but keep the spaces
+                    const words = buffer.split(/(\s+)/);
+                    
+                    // Process complete words (skip the last word if buffer doesn't end with space)
+                    const wordsToProcess = buffer.endsWith(' ') || buffer.endsWith('\n') ? words : words.slice(0, -1);
+                    
+                    for (const word of wordsToProcess) {
+                        if (!displayedText.includes(word) || displayedText.length < (displayedText + word).length) {
+                            displayedText += word;
+                            messageDiv.textContent = displayedText;
+                            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                            await sleep(50);
+                        }
+                    }
+
+                    // Keep only the last incomplete word in buffer
+                    buffer = (buffer.endsWith(' ') || buffer.endsWith('\n')) ? '' : words[words.length - 1] || '';
+                }
+
+                // Add any remaining text in buffer
+                if (buffer) {
+                    displayedText += buffer;
+                    fullAssistantResponse += buffer;
+                    messageDiv.textContent = displayedText;
+                    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                }
+
+                // Add the complete exchange to chat history
+                addToChatHistory(question, fullAssistantResponse);
+
+            } catch (error) {
+                hideTypingIndicator();
+                addMessage(`Error: ${error.message}`, 'error');
+            } finally {
+                sendButton.disabled = false;
+                input.disabled = false;
+                input.focus();
+            }
+        }
+
+        // Auto-resize textarea
+        function autoResize() {
+            const input = document.getElementById('chatInput');
+            input.style.height = 'auto';
+            input.style.height = Math.min(input.scrollHeight, 120) + 'px';
+        }
+
+        // Event listeners
+        document.getElementById('chatInput').addEventListener('input', autoResize);
+        
+        document.getElementById('chatInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+
+        // Initialize
+        window.addEventListener('load', function() {
+            checkToken();
+            document.getElementById('chatInput').focus();
+        });
+    </script>
+</body>
+</html>
